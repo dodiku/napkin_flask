@@ -1,16 +1,41 @@
 from app import db
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.inspection import inspect
 
 
-class Group(db.Model):
+class ModelBase(object):
+    __exclude__ = []
+
+    def serialize(self):
+        attrs = [a for a in inspect(self).attrs.keys() if a not in self.__class__.__exclude__]
+        return {c: getattr(self, c) for c in attrs}
+
+    @staticmethod
+    def serialize_list(l):
+        return [m.serialize() for m in l]
+
+
+class Group(db.Model, ModelBase):
     __tablename__ = 'group'
+    __exclude__ = ['id']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False, unique=True)
 
+    @staticmethod
+    def get_or_create(name):
+        group = Group.query.filter_by(name=name).first()
+        if not group:
+            group = Group(name=name)
+            db.session.add(group)
+            db.session.commit()
 
-class Post(db.Model):
+        return group
+
+
+class Post(db.Model, ModelBase):
     __tablename__ = 'post'
+    __exclude__ = ['id']
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, ForeignKey('group.id'))
     group = relationship(Group, backref=backref('posts', uselist=True))
