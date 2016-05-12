@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from flask.ext.sqlalchemy import SQLAlchemy
 
 
@@ -16,9 +16,15 @@ def hello():
     return "Hello World!"
 
 
-@app.route('/<group_name>/')
+@app.route('/<group_name>/', methods=['GET', 'POST'])
 def group_page(group_name):
     group = Group.get_or_create(group_name)
+
+    if request.method == 'POST':
+        json = request.get_json()
+        if json:
+            group.add_post(getattr(json, 'url', ''), getattr(json, 'text', ''))
+
     return jsonify(group.serialize())
 
 

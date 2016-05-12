@@ -32,10 +32,21 @@ class Group(db.Model, ModelBase):
 
         return group
 
+    def serialize(self):
+        d = super(Group, self).serialize()
+        d['posts'] = [p.serialize() for p in d['posts']]
+        return d
+
+    def add_post(self, url, text):
+        post = Post(group=self, url=url, text=text)
+        db.session.add(post)
+        db.session.commit()
+
 
 class Post(db.Model, ModelBase):
     __tablename__ = 'post'
-    __exclude__ = ['id']
+    __exclude__ = ['id', 'group']
+
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, ForeignKey('group.id'))
     group = relationship(Group, backref=backref('posts', uselist=True))
