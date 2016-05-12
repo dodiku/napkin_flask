@@ -1,5 +1,5 @@
-from random import randint
 from app import db
+from random_name import get_name
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.inspection import inspect
@@ -26,7 +26,7 @@ class Group(db.Model, ModelBase):
     @staticmethod
     def generate_name():
         for i in range(1, 10):
-            name = 'random-name-{}'.format(randint(1000, 9999))
+            name = get_name()
             if not Group.query.filter_by(name=name).first():
                 return name
 
