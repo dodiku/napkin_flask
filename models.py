@@ -1,3 +1,4 @@
+from random import randint
 from app import db
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
@@ -21,6 +22,14 @@ class Group(db.Model, ModelBase):
     __exclude__ = ['id']
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False, unique=True)
+
+    @staticmethod
+    def generate_name():
+        for i in range(1, 10):
+            name = 'random-name-{}'.format(randint(1000, 9999))
+            if not Group.query.filter_by(name=name).first():
+                return name
+
 
     @staticmethod
     def get_or_create(name):

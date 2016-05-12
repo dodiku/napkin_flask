@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 
 
@@ -11,20 +11,23 @@ db = SQLAlchemy(app)
 from models import *
 
 
-@app.route('/')
-def hello():
-    return "Hello World!"
-
-
+@app.route('/', defaults={'group_name': None})
 @app.route('/<group_name>/', methods=['GET', 'POST'])
 def group_page(group_name):
+    # Make sure that a group name was given, otherwise generate a name.
+    if not group_name:
+        return redirect('/{}/'.format(Group.generate_name()))
+
+    # Get or create a group with this name.
     group = Group.get_or_create(group_name)
 
+    # If it's a POST request, create a new post in the group.
     if request.method == 'POST':
         json = request.get_json()
         if json:
             group.add_post(getattr(json, 'url', ''), getattr(json, 'text', ''))
 
+    # Serialize and return the group and its posts.
     return jsonify(group.serialize())
 
 
